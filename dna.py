@@ -38,6 +38,9 @@ class Nucleotide:
         return Nucleotide(_nucleotide_complements[base]
                           for base in self._wildcard)
 
+    def sort_key(self):
+        raise NotImplementedError
+
 # immutable
 class Sequence:
     def __init__(self, nucleotides):
@@ -51,7 +54,7 @@ class Sequence:
                         for nucleotide in self._nucleotides)
 
     def reverse(self):
-        return Sequence(list(self._nucleotides).reverse())
+        return Sequence(reversed(self._nucleotides))
 
 # immutable
 class LinearSequence(Sequence):
@@ -60,6 +63,40 @@ class LinearSequence(Sequence):
 
     __repr__ = __str__
 
+_canonical_rotate(sequence, key=None):
+    """
+    Finds the rotation of the sequence that lexicographically minimizes the key
+    function over the sequence. Returns 2-tuple (rotation, amount), where
+    rotation is a list giving the rotated sequence, and amount is an integer
+    indicating the amount of rotation to the left.
+
+    One in-place left-rotation of a list 'L' is defined as:
+        L.append(L.pop(0))
+
+    If the sequence is periodic with period 'n', then the returned
+    rotation amount will be less than n.
+
+    As a corollary, if the key function satisfies the proposition:
+        key(x) == key(y) iff x == y
+    then the returned rotation is "canonical".
+    """
+    seq = list(sequence)       # constant
+    keys = list(map(key, seq)) # constant
+    skip = 0                   # which item we are comparing
+    candidates = list(seq)     # indices of seq, equivalent to rotation amount
+
+    while skip < len(seq) and len(candidates) > 1:
+        # validate candidates
+        candidate_keys = [keys[(c + skip) % len(seq)] for c in candidates]
+        lightest = min(candidate_keys)
+
+        # prune bad candidates (the ones that don't have the minimum key)
+        # ...
+        # look at next item
+
 # immutable
 class CircularSequence(Sequence):
-    pass
+    def __init__(self, nucleotides):
+        rotated, amount = _canonical_rotate(nucleotides,
+                                            lambda n : n.sort_key())
+        super.__init__(rotated)

@@ -1,7 +1,7 @@
-_nucleotide_complements = {"a" : "t",
-                           "c" : "g",
-                           "g" : "c",
-                           "t" : "a"}
+_nucleotides = {"a" : "t",
+                "c" : "g",
+                "g" : "c",
+                "t" : "a"}
 
 _nucleotide_repr = {frozenset("a")    : "A",
                     frozenset("c")    : "C",
@@ -17,11 +17,27 @@ _nucleotide_repr = {frozenset("a")    : "A",
                     frozenset("agt")  : "D",
                     frozenset("acgt") : "N"}
 
+def _min_rotation(sequence):
+    """
+    Returns the amount of left-rotation of `sequence' that minimizes the
+    sequence under lexicographical order. The `n'-step left-rotation is:
+        sequence[n:] + sequence[:n]
+    """
+    size = len(sequence) # constant
+    depth = 0
+    candidates = tuple(range(size))
+    while depth < size and len(candidates) > 1:
+        vals = tuple(sequence[(c + depth) % size] for c in candidates)
+        lightest = min(vals)
+        candidates = tuple(c for c, v in zip(candidates, vals) if v == lightest)
+        depth += 1
+    return candidates[0]
+
 # immutable
 class Nucleotide:
     def __init__(self, wildcard):
         w = frozenset(wildcard)
-        assert(all(base in _nucleotide_complements for base in w))
+        assert all(base in _nucleotides for base in w)
         self._wildcard = w
 
     def __str__(self):
@@ -35,68 +51,39 @@ class Nucleotide:
     __repr__ = __str__
 
     def complement(self):
-        return Nucleotide(_nucleotide_complements[base]
+        return Nucleotide(_nucleotides[base]
                           for base in self._wildcard)
 
     def sort_key(self):
-        raise NotImplementedError
+        return tuple(2 ** i
+                     for i, base in enumerate(sorted(_nucleotides))
+                     if base in self._wildcard)
 
-# immutable
-class Sequence:
+class BaseSequence:
     def __init__(self, nucleotides):
-        self._nucleotides = tuple(nucleotides)
+        self._nucleotides = nucleotides
 
     def __len__(self):
         return len(self._nucleotides)
 
-    def complement(self):
-        return Sequence(nucleotide.complement()
-                        for nucleotide in self._nucleotides)
+    def dump(self):
+        return "".join(str(n) for n in self._nucleotides)
 
-    def reverse(self):
-        return Sequence(reversed(self._nucleotides))
+class LinearSequence(BaseSequence):
+    def __init__(self, nucleotides):
+        super.__init__(tuple(nucleotides))
 
-# immutable
-class LinearSequence(Sequence):
     def __str__(self):
-        return "".join(str(nucleotide) for nucleotide in self._nucleotides)
+        return "linear sequence of {0} bases".format(len(self))
 
     __repr__ = __str__
 
-_canonical_rotate(sequence, key=None):
-    """
-    Finds the rotation of the sequence that lexicographically minimizes the key
-    function over the sequence. Returns 2-tuple (rotation, amount), where
-    rotation is a list giving the rotated sequence, and amount is an integer
-    indicating the amount of rotation to the left.
-
-    One in-place left-rotation of a list 'L' is defined as:
-        L.append(L.pop(0))
-
-    If the sequence is periodic with period 'n', then the returned
-    rotation amount will be less than n.
-
-    As a corollary, if the key function satisfies the proposition:
-        key(x) == key(y) iff x == y
-    then the returned rotation is "canonical".
-    """
-    seq = list(sequence)       # constant
-    keys = list(map(key, seq)) # constant
-    skip = 0                   # which item we are comparing
-    candidates = list(seq)     # indices of seq, equivalent to rotation amount
-
-    while skip < len(seq) and len(candidates) > 1:
-        # validate candidates
-        candidate_keys = [keys[(c + skip) % len(seq)] for c in candidates]
-        lightest = min(candidate_keys)
-
-        # prune bad candidates (the ones that don't have the minimum key)
-        # ...
-        # look at next item
-
-# immutable
-class CircularSequence(Sequence):
+class CircularSequence(BaseSequence):
     def __init__(self, nucleotides):
-        rotated, amount = _canonical_rotate(nucleotides,
-                                            lambda n : n.sort_key())
-        super.__init__(rotated)
+        amount = _min_rotation(n.sort_key() for n in nucleotides)
+        super.__init__(tuple(nucleotides[amount:] + nucleotides[:amount]))
+
+    def __str__(self):
+        return "circular sequence of {0} bases".format(len(self))
+
+    __repr__ = __str__

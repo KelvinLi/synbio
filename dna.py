@@ -33,7 +33,6 @@ def _min_rotation(sequence):
         depth += 1
     return candidates[0]
 
-# immutable
 class Nucleotide:
     def __init__(self, wildcard):
         w = frozenset(wildcard)
@@ -49,6 +48,13 @@ class Nucleotide:
             raise ValueError(message) from exc
 
     __repr__ = __str__
+
+    def __eq__(self, other):
+        return self is other
+
+    def is_complement(self, other):
+        return other._wildcard == \
+               frozenset(_nucleotides[base] for base in self._wildcard)
 
     def complement(self):
         return Nucleotide(_nucleotides[base]
@@ -66,6 +72,9 @@ class BaseSequence:
     def __len__(self):
         return len(self._nucleotides)
 
+    def __eq__(self, other):
+        return self is other
+
     def dump(self):
         return "".join(str(n) for n in self._nucleotides)
 
@@ -78,6 +87,16 @@ class LinearSequence(BaseSequence):
 
     __repr__ = __str__
 
+    def is_reverse_complement(self, other):
+        if other.is_circular():
+            return False
+        return all(s.is_complement(o)
+                   for s, o in zip(reversed(self._nucleotides),
+                                   other._nucleotides))
+
+    def is_circular(self):
+        return False
+
 class CircularSequence(BaseSequence):
     def __init__(self, nucleotides):
         amount = _min_rotation(n.sort_key() for n in nucleotides)
@@ -87,3 +106,6 @@ class CircularSequence(BaseSequence):
         return "circular sequence of {0} bases".format(len(self))
 
     __repr__ = __str__
+
+    def is_circular(self):
+        return True

@@ -128,7 +128,7 @@ class BaseSequence:
 
 class LinearSequence(BaseSequence):
     def __init__(self, nucleotides):
-        super.__init__(tuple(nucleotides))
+        super().__init__(tuple(nucleotides))
 
     def __str__(self):
         return "linear sequence of {0} bases".format(len(self))
@@ -154,8 +154,9 @@ class LinearSequence(BaseSequence):
 
 class CircularSequence(BaseSequence):
     def __init__(self, nucleotides):
-        amount = _min_rotation(n.sort_key() for n in nucleotides)
-        super.__init__(tuple(nucleotides[amount:] + nucleotides[:amount]))
+        nuc = tuple(nucleotides)
+        amount = _min_rotation(tuple(n.sort_key() for n in nuc))
+        super().__init__(nuc[amount:] + nuc[:amount])
 
     def __str__(self):
         return "circular sequence of {0} bases".format(len(self))
@@ -222,7 +223,7 @@ class Cluster:
     def add_annealment(self, sequences, starts, length, *, overwrite=False):
         sequences = tuple(sequences)
         starts = tuple(starts)
-        _validate_pre_add_annealment(sequences, starts, length)
+        self._validate_pre_add_annealment(sequences, starts, length)
         new = _Annealment(sequences, starts, length)
         if overwrite:
             raise NotImplementedError

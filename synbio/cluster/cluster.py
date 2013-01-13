@@ -1,15 +1,15 @@
-from . import priv as _util
+from . import priv
 
 class Nucleotide:
     def __init__(self, wildcard):
         w = frozenset(wildcard)
-        if not all(base in _util.nucleotides for base in w):
+        if not all(base in priv.nucleotides for base in w):
             raise ValueError
         self._wildcard = w
 
     def __str__(self):
         try:
-            return _util.nucleotide_repr[self._wildcard]
+            return priv.nucleotide_repr[self._wildcard]
         except KeyError as exc:
             raw_message = "No representation for wildcard ({0})"
             message = raw_message.format(self._wildcard)
@@ -22,11 +22,11 @@ class Nucleotide:
 
     def is_complement(self, other):
         return other._wildcard == \
-               frozenset(_util.nucleotides[base] for base in self._wildcard)
+               frozenset(priv.nucleotides[base] for base in self._wildcard)
 
     def sort_key(self):
         return tuple(2 ** i
-                     for i, base in enumerate(sorted(_util.nucleotides))
+                     for i, base in enumerate(sorted(priv.nucleotides))
                      if base in self._wildcard)
 
 class BaseSequence:
@@ -71,7 +71,7 @@ class LinearSequence(BaseSequence):
 class CircularSequence(BaseSequence):
     def __init__(self, nucleotides):
         nuc = tuple(nucleotides)
-        amount = _util.min_rotation(tuple(n.sort_key() for n in nuc))
+        amount = priv.min_rotation(tuple(n.sort_key() for n in nuc))
         super().__init__(nuc[amount:] + nuc[:amount])
 
     def __str__(self):
@@ -84,7 +84,7 @@ class CircularSequence(BaseSequence):
 
     # TODO: transfer properties?
     def fragment(self, start, length):
-        frag = _util.circular_fragment(self._nucleotides, start, length)
+        frag = priv.circular_fragment(self._nucleotides, start, length)
         return LinearSequence(frag)
 
 class _Annealment:
@@ -113,7 +113,7 @@ class _Annealment:
                 continue
             common_starts_ends = ((self.starts[s], self.ends()[s]),
                                   (other.starts[o], other.ends()[o]))
-            if _util.sequence_has_overlap(common_sequence, common_starts_ends):
+            if priv.sequence_has_overlap(common_sequence, common_starts_ends):
                 return True
         return False
 

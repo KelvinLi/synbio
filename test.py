@@ -1,4 +1,4 @@
-import dna
+import synbio.cluster.cluster as dna
 
 def dump_cluster(cluster):
     print(cluster._sequences)

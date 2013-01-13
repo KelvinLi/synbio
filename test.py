@@ -19,3 +19,13 @@ dump_cluster(cluster)
 
 cluster.add_annealment(tuple(cluster._sequences), (2, 4), 3)
 dump_cluster(cluster)
+
+cluster.remove_sequence(cluster._sequences[0])
+print(cluster._sequences)
+print(cluster._annealments)
+print("=========")
+
+cluster.remove_sequence(cluster._sequences[0])
+print(cluster._sequences)
+print(cluster._annealments)
+print("=========")

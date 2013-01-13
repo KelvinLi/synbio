@@ -20,7 +20,9 @@ _nucleotide_repr = {frozenset("a")    : "A",
 def _min_rotation(sequence):
     """
     Returns the amount of left-rotation of `sequence' that minimizes the
-    sequence under lexicographical order. The `n'-step left-rotation is:
+    sequence under lexicographical order.
+
+    The n-step left-rotation is defined as:
         sequence[n:] + sequence[:n]
     """
     L = len(sequence)
@@ -36,8 +38,10 @@ def _min_rotation(sequence):
 
 def _circular_fragment(sequence, start, length):
     """
-    Returns the subsequence of given length, beginning at index `start',
-    treating `sequence' as circular.
+    Returns a subsequence, treating `sequence' as circular.
+
+    start  -- (int) starting index
+    length -- (int) number of nucleotides in resulting subsequence
     """
     L = len(sequence)
     if not L or length < 0 or length > L:
@@ -50,8 +54,10 @@ def _circular_fragment(sequence, start, length):
 
 def _has_overlap(starts_ends):
     """
-    Given an iterable of the form [(start0, end0), (start1, end1), ...],
-    returns whether the half-open intervals have any overlap.
+    Returns True if any of the given half-open intervals intersect.
+
+    starts_ends -- (iterable) half-open intervals of the form:
+                   [(start0, end0), (start1, end1), ...]
     """
     taken = list()
     for s, e in starts_ends:
@@ -64,8 +70,11 @@ def _has_overlap(starts_ends):
 
 def _normalized_circular_starts_ends(starts_ends, L):
     """
-    Normalizes the input to `_has_overlap', assuming `starts_ends'
-    specifies intervals on a circular sequence of size `L'.
+    Given a set of intervals, normalizes the intervals over modulo arithmetic
+    so that intersections can be computed using `_has_overlap'
+
+    starts_ends -- (iterable) half-open intervals, to be normalized modulo `L'
+    L           -- (int) modulus
     """
     iter = ((s % L, e % L) for s, e in starts_ends)
     for s, e in iter:
@@ -78,7 +87,11 @@ def _normalized_circular_starts_ends(starts_ends, L):
 
 def _sequence_has_overlap(sequence, starts_ends):
     """
-    Returns True if `starts_ends' half-open intervals overlap on `sequence'.
+    Returns True if the given half-open intervals overlap on `sequence'.
+
+    sequence -- (BaseSequence) used to extract geometry
+    starts_ends -- (iterable) half-open intervals; interpretation
+                   depends on geometry
     """
     return _has_overlap(_normalized_circular_starts_ends(starts_ends,
                                                          len(sequence))
@@ -88,7 +101,8 @@ def _sequence_has_overlap(sequence, starts_ends):
 class Nucleotide:
     def __init__(self, wildcard):
         w = frozenset(wildcard)
-        assert all(base in _nucleotides for base in w)
+        if not all(base in _nucleotides for base in w):
+            raise ValueError
         self._wildcard = w
 
     def __str__(self):
@@ -172,6 +186,7 @@ class CircularSequence(BaseSequence):
         return LinearSequence(frag)
 
 class _Annealment:
+    """subordinate to Cluster"""
     def __init__(self, sequences, starts, length):
         self.sequences = tuple(sequences)
         self.starts = tuple(starts)
@@ -201,14 +216,10 @@ class _Annealment:
         return False
 
 class Cluster:
+    """Primary interface"""
     def __init__(self):
         self._sequences = list()
         self._annealments = list()
-
-    def add_sequence(self, new):
-        if new in self._sequences:
-            raise ValueError("cluster already contains this sequence")
-        self._sequences.append(new)
 
     def _validate_pre_add_annealment(self, sequences, starts, length):
         if not len(sequences) == len(starts) == 2:
@@ -220,7 +231,19 @@ class Cluster:
         if not all(s in self._sequences for s in sequences):
             raise ValueError("cluster must contain the input sequences")
 
+    def add_sequence(self, new):
+        if new in self._sequences:
+            raise ValueError("cluster already contains this sequence")
+        self._sequences.append(new)
+
     def add_annealment(self, sequences, starts, length, *, overwrite=False):
+        """
+        Declares annealment between nucleotides of two sequences, with
+        two given start positions.
+
+        length    -- (int) number of nucleotides annealed
+        overwrite -- (boolean) allow changing of existing annealments
+        """
         sequences = tuple(sequences)
         starts = tuple(starts)
         self._validate_pre_add_annealment(sequences, starts, length)
@@ -230,3 +253,26 @@ class Cluster:
         if any(new.has_overlap(old) for old in self._annealments):
             raise ValueError("refusing to overwrite existing annealment")
         self._annealments.append(new)
+
+    def strip_annealments(self, sequences):
+        """
+        Strip all annealments referring to any sequence in `sequences'.
+
+        sequences -- (iterable of BaseSequence)
+        """
+        S = tuple(sequences)
+        self._annealments = [ann for ann in self._annealments
+                             if not any(seq in ann.sequences for seq in S)]
+
+    def remove_sequence(self, old):
+        """
+        Remove `old' from this Cluster, and strip all annealments
+        referring to `old'.
+
+        old -- (BaseSequence) sequence to be removed
+
+        Raises ValueError if `old' is not in this Cluster.
+        """
+        self.strip_annealments((old,))
+        self._sequences.remove(old)
+        assert old not in self._sequences

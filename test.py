@@ -1,31 +1,31 @@
-import synbio.cluster.cluster as dna
+from synbio.clump import clump
 
-def dump_cluster(cluster):
-    print(cluster._sequences)
-    print(cluster._annealments)
-    print(cluster._sequences[0].dump())
-    print(cluster._sequences[1].dump())
-    print([ann.starts for ann in cluster._annealments])
-    print([ann._length for ann in cluster._annealments])
+def dump_clump(clump):
+    print(clump._sequences)
+    print(clump._annealments)
+    print(clump._sequences[0].dump())
+    print(clump._sequences[1].dump())
+    print([ann.starts for ann in clump._annealments])
+    print([ann._length for ann in clump._annealments])
     print("=========")
 
-cluster = dna.Cluster()
+test_clump = clump.Clump()
 
-cluster.add_sequence(dna.LinearSequence(dna.Nucleotide(n) for n in "agctg"))
-cluster.add_sequence(dna.CircularSequence(dna.Nucleotide(n) for n in "gctca"))
+test_clump.add_sequence(clump.LinearSequence(clump.Nucleotide(n) for n in "agctg"))
+test_clump.add_sequence(clump.CircularSequence(clump.Nucleotide(n) for n in "gctca"))
 
-cluster.add_annealment(tuple(cluster._sequences), (0, 2), 2)
-dump_cluster(cluster)
+test_clump.add_annealment(tuple(test_clump._sequences), (0, 2), 2)
+dump_clump(test_clump)
 
-cluster.add_annealment(tuple(cluster._sequences), (2, 4), 3)
-dump_cluster(cluster)
+test_clump.add_annealment(tuple(test_clump._sequences), (2, 4), 3)
+dump_clump(test_clump)
 
-cluster.remove_sequence(cluster._sequences[0])
-print(cluster._sequences)
-print(cluster._annealments)
+test_clump.remove_sequence(test_clump._sequences[0])
+print(test_clump._sequences)
+print(test_clump._annealments)
 print("=========")
 
-cluster.remove_sequence(cluster._sequences[0])
-print(cluster._sequences)
-print(cluster._annealments)
+test_clump.remove_sequence(test_clump._sequences[0])
+print(test_clump._sequences)
+print(test_clump._annealments)
 print("=========")

@@ -88,7 +88,7 @@ class CircularSequence(BaseSequence):
         return LinearSequence(frag)
 
 class _Annealment:
-    """subordinate to Cluster"""
+    """subordinate to Clump"""
     def __init__(self, sequences, starts, length):
         self.sequences = tuple(sequences)
         self.starts = tuple(starts)
@@ -117,7 +117,7 @@ class _Annealment:
                 return True
         return False
 
-class Cluster:
+class Clump:
     """Primary interface"""
     def __init__(self):
         self._sequences = list()
@@ -131,11 +131,11 @@ class Cluster:
         if not all(s >= 0 for s in starts):
             raise ValueError("start points must be non-negative")
         if not all(s in self._sequences for s in sequences):
-            raise ValueError("cluster must contain the input sequences")
+            raise ValueError("clump must contain the input sequences")
 
     def add_sequence(self, new):
         if new in self._sequences:
-            raise ValueError("cluster already contains this sequence")
+            raise ValueError("clump already contains this sequence")
         self._sequences.append(new)
 
     def add_annealment(self, sequences, starts, length, *, overwrite=False):
@@ -168,12 +168,12 @@ class Cluster:
 
     def remove_sequence(self, old):
         """
-        Remove `old' from this Cluster, and strip all annealments
+        Remove `old' from this Clump, and strip all annealments
         referring to `old'.
 
         old -- (BaseSequence) sequence to be removed
 
-        Raises ValueError if `old' is not in this Cluster.
+        Raises ValueError if `old' is not in this Clump.
         """
         self.strip_annealments((old,))
         self._sequences.remove(old)

@@ -1,9 +1,9 @@
-from . import view
+from . import shape
 
-class GenericView(view.BaseView):
+class GenericShape(shape.BaseShape):
     def _validate(self):
         pass # allow all clumps
 
-    @view.view_method
+    @shape.shape_method
     def count_sequences(self):
         return len(self._clump.sequences)

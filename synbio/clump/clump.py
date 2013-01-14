@@ -1,5 +1,5 @@
 """Raw model of a "clump" of DNA.
-Only the View layer should be intimately aware of this layer.
+Only the shape layer should be intimately aware of this layer.
 
 The objects in this module assemble together as follows:
 
@@ -11,8 +11,8 @@ The objects in this module assemble together as follows:
 BaseSequence is abstract. The concrete subclasses are LinearSequence
 and CircularSequence.
 
-The only mutators in this module are in Clump. All object properties
-are intended to be read-only.
+The only mutators in this module are in the Clump class. All object
+properties are intended to be read-only.
 """
 
 from . import priv

@@ -9,7 +9,7 @@ def _x(clump_obj):
 
 @shape.declare_op(GENERIC, "count_sequences")
 def _x(clump_obj):
-    return len(clump.sequences)
+    return len(clump_obj.sequences)
 
 # = = = =
 LINEAR = shape.Shape((GENERIC,))
@@ -31,6 +31,10 @@ def _x(clump_obj):
                for ann in clump_obj.annealments):
         raise shape.ShapeError("the two sequences must be annealed "
                                "to each other")
+
+@shape.declare_op(DOUBLE_STRANDED, "sequence_lengths")
+def _x(clump_obj):
+    return tuple(len(seq) for seq in clump_obj.sequences)
 
 # = = = =
 PCR_TEMPLATE = shape.Shape((LINEAR, DOUBLE_STRANDED))

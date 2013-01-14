@@ -1,9 +1,5 @@
-from synbio import shapes
-from synbio.clump import clump
+from synbio import shape, shapes
 
-test_clump = clump.Clump()
-test_clump.add_sequence(clump.LinearSequence(clump.Nucleotide(n)
-                                             for n in "attcg"))
-generic_shape = shapes.GenericShape(test_clump)
-
-print(generic_shape.count_sequences())
+test_instance = shape.ShapeInstance(shapes.PCR_TEMPLATE, "attacg")
+test_instance.cast()
+test_instance.cast(shapes.DOUBLE_STRANDED)

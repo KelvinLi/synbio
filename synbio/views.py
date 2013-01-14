@@ -6,4 +6,4 @@ class GenericView(view.BaseView):
 
     @view.view_method
     def count_sequences(self):
-        return len(self._clump._sequences)
+        return len(self._clump.sequences)

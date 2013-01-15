@@ -28,11 +28,11 @@ class Shape:
             return True
         return any(g.is_specialization(shape) for g in self._generalizations)
 
-    def validate(self, clump):
+    def validate(self, clump_obj):
         # TODO: optimize for diamond relationships
         for g in self._generalizations:
-            g.validate(clump)
-        self.call_operator(OpNames.VALIDATE, clump)
+            g.validate(clump_obj)
+        self.call_operator(OpNames.VALIDATE, clump_obj)
 
     def call_operator(self, op_name, *args, **kwargs):
         return self._ops[op_name](*args, **kwargs)
@@ -45,17 +45,19 @@ class Shape:
 class ShapeInstance:
     def __init__(self, shape, *args, **kwargs):
         self._shape = shape
-        self._clump = clump.Clump()
+        self._clump_obj = clump.Clump()
         self.operate(OpNames.INIT, *args, **kwargs)
 
     def cast(self, shape=None):
         if shape is None:
             shape = self._shape
-        shape.validate(self._clump)
+        shape.validate(self._clump_obj)
         self._shape = shape
 
     def is_shape(self, shape):
         return self._shape.is_specialization(shape)
 
     def operate(self, op_name, *args, **kwargs):
-        return self._shape.call_operator(op_name, self._clump, *args, **kwargs)
+        return self._shape.call_operator(op_name,
+                                         self._clump_obj,
+                                         *args, **kwargs)

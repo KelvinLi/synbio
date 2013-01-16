@@ -1,6 +1,50 @@
 """Raw model of a "clump" of DNA."""
 
-from . import priv
+def _has_overlap(starts_ends):
+    """
+    Returns True if any of the given half-open intervals intersect.
+
+    starts_ends -- (iterable) half-open intervals of the form:
+                   [(start0, end0), (start1, end1), ...]
+    """
+    taken = list()
+    for s, e in starts_ends:
+        if not s < e:
+            raise ValueError
+        if any(not (old_e <= s or e <= old_s) for old_s, old_e in taken):
+            return True
+        taken.append((s, e))
+    return False
+
+def _normalized_circular_starts_ends(starts_ends, L):
+    """
+    Given a set of intervals, normalizes the intervals over modulo arithmetic
+    so that intersections can be computed using `_has_overlap'
+
+    starts_ends -- (iterable) half-open intervals, to be normalized modulo `L'
+    L           -- (int) modulus
+    """
+    iter = ((s % L, e % L) for s, e in starts_ends)
+    for s, e in iter:
+        if s < e:
+            yield (s, e)
+            continue
+        yield (s, L)
+        if e:
+            yield (0, e)
+
+def _sequence_has_overlap(sequence, starts_ends):
+    """
+    Returns True if the given half-open intervals overlap on `sequence'.
+
+    sequence -- (BaseSequence) used to extract geometry
+    starts_ends -- (iterable) half-open intervals; interpretation
+                   depends on geometry
+    """
+    if sequence.is_circular:
+        starts_ends = _normalized_circular_starts_ends(
+                      starts_ends, len(sequence))
+    return _has_overlap(starts_ends)
 
 class Annealment:
     def __init__(self, sequences, starts, length):
@@ -27,7 +71,7 @@ class Annealment:
                 continue
             common_starts_ends = ((self.starts[s], self.ends()[s]),
                                   (other.starts[o], other.ends()[o]))
-            if priv.sequence_has_overlap(common_sequence, common_starts_ends):
+            if _sequence_has_overlap(common_sequence, common_starts_ends):
                 return True
         return False
 

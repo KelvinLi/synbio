@@ -1,5 +1,4 @@
-from .clump import clump
-from .clump import sequence
+from . import sequence
 from . import shape
 
 # = = = =

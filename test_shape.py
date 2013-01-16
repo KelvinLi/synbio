@@ -1,5 +1,4 @@
-from synbio.clump import sequence
-from synbio import shape, shapes
+from synbio import sequence, shape, shapes
 
 def make_nucleotide(s):
     if s == "a":

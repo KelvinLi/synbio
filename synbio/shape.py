@@ -1,6 +1,6 @@
 """Shape layer -- framework for extracting features out of clumps"""
 
-from .clump import clump
+from . import clump
 
 def declare_op(shape_type, name):
     def out(func):

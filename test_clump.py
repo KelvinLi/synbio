@@ -1,5 +1,5 @@
-from synbio.clump import clump
-from synbio.clump import sequence
+from synbio import clump
+from synbio import sequence
 
 def dump_nuc(n):
     if n == sequence.Nucleotide.A:

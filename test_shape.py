@@ -1,6 +1,19 @@
+from synbio.clump import sequence
 from synbio import shape, shapes
 
-test_instance = shape.ShapeInstance(shapes.PCR_TEMPLATE, "attacg")
+def make_nucleotide(s):
+    if s == "a":
+        return sequence.Nucleotide.A
+    elif s == "c":
+        return sequence.Nucleotide.C
+    elif s == "g":
+        return sequence.Nucleotide.G
+    elif s == "t":
+        return sequence.Nucleotide.T
+    else:
+        raise ValueError
+
+test_instance = shape.ShapeInstance(shapes.PCR_TEMPLATE, map(make_nucleotide, "attacg"))
 test_instance.cast()
 
 test_instance.cast(shapes.DOUBLE_STRANDED)

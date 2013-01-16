@@ -1,4 +1,5 @@
 from .clump import clump
+from .clump import sequence
 from . import shape
 
 # = = = =
@@ -15,7 +16,7 @@ def _x(clump_obj):
 LINEAR = shape.Shape((GENERIC,))
 @shape.declare_op(LINEAR, shape.OpNames.VALIDATE)
 def _x(clump_obj):
-    if not all(not s.is_circular() for s in clump_obj.sequences):
+    if not all(not s.is_circular for s in clump_obj.sequences):
         raise shape.ShapeError("all sequences must be linear")
 
 # = = = =
@@ -43,12 +44,9 @@ def _x(clump_obj):
     pass
 
 @shape.declare_op(PCR_TEMPLATE, shape.OpNames.INIT)
-def _x(clump_obj, nucleotide_string):
-    nuc = tuple(clump.Nucleotide(c) for c in nucleotide_string)
-    revcomp_nuc = tuple(clump.Nucleotide(clump.priv.nucleotides[base]
-                                         for base in n.wildcard)
-                        for n in reversed(nuc))
-    seqs = tuple(clump.LinearSequence(n) for n in (nuc, revcomp_nuc))
-    for s in seqs:
-        clump_obj.add_sequence(s)
-    clump_obj.add_annealment(seqs, (0, 0), len(nuc))
+def _x(clump_obj, nucleotides):
+    seq = sequence.LinearSequence(nucleotides)
+    rseq = seq.reverse_complement()
+    clump_obj.add_sequence(seq)
+    clump_obj.add_sequence(rseq)
+    clump_obj.add_annealment((seq, rseq), (0, 0), len(seq))

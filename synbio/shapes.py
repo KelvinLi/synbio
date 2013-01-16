@@ -3,7 +3,7 @@ from .clump import sequence
 from . import shape
 
 # = = = =
-GENERIC = shape.Shape()
+GENERIC = shape.ShapeType()
 @shape.declare_op(GENERIC, shape.OpNames.VALIDATE)
 def _x(clump_obj):
     pass
@@ -13,14 +13,14 @@ def _x(clump_obj):
     return len(clump_obj.sequences)
 
 # = = = =
-LINEAR = shape.Shape((GENERIC,))
+LINEAR = shape.ShapeType(GENERIC)
 @shape.declare_op(LINEAR, shape.OpNames.VALIDATE)
 def _x(clump_obj):
     if not all(not s.is_circular for s in clump_obj.sequences):
         raise shape.ShapeError("all sequences must be linear")
 
 # = = = =
-DOUBLE_STRANDED = shape.Shape((GENERIC,))
+DOUBLE_STRANDED = shape.ShapeType(GENERIC)
 @shape.declare_op(DOUBLE_STRANDED, shape.OpNames.VALIDATE)
 def _x(clump_obj):
     if not len(clump_obj.sequences) == 2:
@@ -38,7 +38,7 @@ def _x(clump_obj):
     return tuple(len(seq) for seq in clump_obj.sequences)
 
 # = = = =
-PCR_TEMPLATE = shape.Shape((LINEAR, DOUBLE_STRANDED))
+PCR_TEMPLATE = shape.ShapeType(LINEAR, DOUBLE_STRANDED)
 @shape.declare_op(PCR_TEMPLATE, shape.OpNames.VALIDATE)
 def _x(clump_obj):
     pass

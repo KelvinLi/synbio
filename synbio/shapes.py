@@ -1,51 +1,61 @@
-from . import sequence
-from . import shape
+from . import clump, sequence
+from .shape import BaseShapeFunc, BaseShapeType, ShapeError
 
-# = = = =
-GENERIC = shape.ShapeType()
-@shape.declare_op(GENERIC, shape.OpNames.VALIDATE)
-def _x(clump_obj):
+class _GenericShapeFunc(BaseShapeFunc):
+    def count_sequences(self):
+        return len(self.c.sequences)
+
+class _GenericShapeType(BaseShapeType):
+    def accept(self, clump_obj): return _GenericShapeFunc(clump_obj)
+    def validate(self, clump_obj): print("generic passed")
+
+GENERIC = _GenericShapeType()
+
+class _LinearShapeFunc(BaseShapeFunc):
     pass
 
-@shape.declare_op(GENERIC, "count_sequences")
-def _x(clump_obj):
-    return len(clump_obj.sequences)
+class _LinearShapeType(BaseShapeType):
+    def accept(self, clump_obj): return _LinearShapeFunc(clump_obj)
+    def validate(self, clump_obj):
+        if any(s.is_circular for s in clump_obj.sequences):
+            raise ShapeError("all sequences must be linear")
+        print("linear passed")
 
-# = = = =
-LINEAR = shape.ShapeType(GENERIC)
-@shape.declare_op(LINEAR, shape.OpNames.VALIDATE)
-def _x(clump_obj):
-    if not all(not s.is_circular for s in clump_obj.sequences):
-        raise shape.ShapeError("all sequences must be linear")
+LINEAR = _LinearShapeType(GENERIC)
 
-# = = = =
-DOUBLE_STRANDED = shape.ShapeType(GENERIC)
-@shape.declare_op(DOUBLE_STRANDED, shape.OpNames.VALIDATE)
-def _x(clump_obj):
-    if not len(clump_obj.sequences) == 2:
-        raise shape.ShapeError("must have exactly two sequences")
-    if not clump_obj.annealments:
-        raise shape.ShapeError("must have at least one annealment")
-    if not any(all(seq in ann.sequences
-                   for seq in clump_obj.sequences)
-               for ann in clump_obj.annealments):
-        raise shape.ShapeError("the two sequences must be annealed "
-                               "to each other")
+class _DoubleStrandedShapeFunc(BaseShapeFunc):
+    def sequence_lengths(self):
+        return tuple(len(seq) for seq in self.c.sequences)
 
-@shape.declare_op(DOUBLE_STRANDED, "sequence_lengths")
-def _x(clump_obj):
-    return tuple(len(seq) for seq in clump_obj.sequences)
+class _DoubleStrandedShapeType(BaseShapeType):
+    def accept(self, clump_obj): return _DoubleStrandedShapeFunc(clump_obj)
+    def validate(self, clump_obj):
+        if not len(clump_obj.sequences) == 2:
+            raise shape.ShapeError("must have exactly two sequences")
+        if not clump_obj.annealments:
+            raise shape.ShapeError("must have at least one annealment")
+        if not any(all(seq in ann.sequences for seq in clump_obj.sequences)
+                   for ann in clump_obj.annealments):
+            raise shape.ShapeError("the two sequences must be annealed to "
+                                   "each other")
+        print("double passed")
 
-# = = = =
-PCR_TEMPLATE = shape.ShapeType(LINEAR, DOUBLE_STRANDED)
-@shape.declare_op(PCR_TEMPLATE, shape.OpNames.VALIDATE)
-def _x(clump_obj):
+DOUBLE_STRANDED = _DoubleStrandedShapeType(GENERIC)
+
+class _PCRTemplateShapeFunc(BaseShapeFunc):
     pass
 
-@shape.declare_op(PCR_TEMPLATE, shape.OpNames.INIT)
-def _x(clump_obj, nucleotides):
+class _PCRTemplateShapeType(BaseShapeType):
+    def accept(self, clump_obj): return _PCRTemplateShapeFunc(clump_obj)
+    def validate(self, clump_obj): print("pcr template passed")
+
+PCR_TEMPLATE = _PCRTemplateShapeType(LINEAR, DOUBLE_STRANDED)
+
+def create_pcr_template(nucleotides):
     seq = sequence.LinearSequence(nucleotides)
     rseq = seq.reverse_complement()
+    clump_obj = clump.Clump()
     clump_obj.add_sequence(seq)
     clump_obj.add_sequence(rseq)
     clump_obj.add_annealment((seq, rseq), (0, 0), len(seq))
+    return clump_obj

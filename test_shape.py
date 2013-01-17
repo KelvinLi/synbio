@@ -1,4 +1,4 @@
-from synbio import sequence, shape, shapes
+from synbio import sequence, shapes
 
 def make_nucleotide(s):
     if s == "a":
@@ -12,11 +12,7 @@ def make_nucleotide(s):
     else:
         raise ValueError
 
-test_instance = shape.ShapeInstance(shapes.PCR_TEMPLATE, map(make_nucleotide, "attacg"))
-test_instance.cast()
-
-test_instance.cast(shapes.DOUBLE_STRANDED)
-print(test_instance.operate("sequence_lengths"))
-
-test_instance.cast(shapes.GENERIC)
-print(test_instance.operate("count_sequences"))
+test_clump = shapes.create_pcr_template(map(make_nucleotide, "attacg"))
+shapes.PCR_TEMPLATE.examine(test_clump)
+print(shapes.DOUBLE_STRANDED.examine(test_clump).sequence_lengths())
+print(shapes.GENERIC.examine(test_clump).count_sequences())

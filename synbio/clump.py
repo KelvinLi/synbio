@@ -77,8 +77,14 @@ class Annealment:
 
 class Clump:
     def __init__(self):
-        self.sequences = list()
-        self.annealments = list()
+        self.sequences = tuple()
+        self.annealments = tuple()
+
+    def __replace(self, *, seq=None, ann=None):
+        new = Clump()
+        new.sequences = self.sequences if seq is None else tuple(seq)
+        new.annealments = self.annealments if ann is None else tuple(ann)
+        return new
 
     def _validate_pre_add_annealment(self, sequences, starts, length):
         if not len(sequences) == len(starts) == 2:
@@ -93,7 +99,7 @@ class Clump:
     def add_sequence(self, new):
         if new in self.sequences:
             raise ValueError("clump already contains this sequence")
-        self.sequences.append(new)
+        return self.__replace(seq=self.sequences + (new,))
 
     def add_annealment(self, sequences, starts, length, *, overwrite=False):
         """
@@ -111,27 +117,24 @@ class Clump:
             raise NotImplementedError
         if any(new.has_overlap(old) for old in self.annealments):
             raise ValueError("refusing to overwrite existing annealment")
-        self.annealments.append(new)
+        return self.__replace(ann=self.annealments + (new,))
 
     def strip_annealments(self, sequences):
-        """
-        Strip all annealments referring to any sequence in `sequences'.
+        """Strip all annealments referring to any sequence in `sequences'.
 
         sequences -- (iterable)
         """
         S = tuple(sequences)
-        self.annealments = [ann for ann in self.annealments
-                            if not any(seq in ann.sequences for seq in S)]
+        i = (ann for ann in self.annealments
+             if not any(seq in ann.sequences for seq in S))
+        return self.__replace(ann=i)
 
     def remove_sequence(self, old):
-        """
-        Remove `old' from this Clump, and strip all annealments
-        referring to `old'.
+        """Remove sequence `old' and strip all annealments referring to `old'.
 
         old -- sequence to be removed
 
         Raises ValueError if `old' is not in this Clump.
         """
-        self.strip_annealments((old,))
-        self.sequences.remove(old)
-        assert old not in self.sequences
+        new = self.strip_annealments((old,))
+        return new.__replace(seq=(s for s in new.sequences if s is not old))

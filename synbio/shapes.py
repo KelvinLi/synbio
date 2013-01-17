@@ -54,8 +54,8 @@ PCR_TEMPLATE = _PCRTemplateShapeType(LINEAR, DOUBLE_STRANDED)
 def create_pcr_template(nucleotides):
     seq = sequence.LinearSequence(nucleotides)
     rseq = seq.reverse_complement()
-    clump_obj = clump.Clump()
-    clump_obj.add_sequence(seq)
-    clump_obj.add_sequence(rseq)
-    clump_obj.add_annealment((seq, rseq), (0, 0), len(seq))
-    return clump_obj
+    new = clump.Clump()
+    new = new.add_sequence(seq)
+    new = new.add_sequence(rseq)
+    new = new.add_annealment((seq, rseq), (0, 0), len(seq))
+    return new

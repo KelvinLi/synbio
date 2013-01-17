@@ -62,18 +62,15 @@ class Nucleotide:
         return cls._complement_table[n]
 
 class BaseSequence:
-    def __init__(self):
-        raise TypeError
+    def __init__(self, nucleotides):
+        assert not issubclass(BaseSequence, type(self))
+        self.nucleotides = nucleotides
 
     def __len__(self):
         return len(self.nucleotides)
 
     def __eq__(self, other):
         return self is other
-
-    def _init(self, nucleotides):
-        """Called by subclasses."""
-        self.nucleotides = nucleotides
 
     def has_same_nucleotides(self, other):
         if self.is_circular ^ other.is_circular:
@@ -90,7 +87,7 @@ class LinearSequence(BaseSequence):
     is_circular = False
 
     def __init__(self, nucleotides):
-        super()._init(tuple(nucleotides))
+        super().__init__(tuple(nucleotides))
 
     def fragment(self, start, length):
         if length < 0:
@@ -109,7 +106,7 @@ class CircularSequence(BaseSequence):
 
         # exploit the fact that nucleotides are integers
         amount = _min_rotation(nuc)
-        super()._init(nuc[amount:] + nuc[:amount])
+        super().__init__(nuc[amount:] + nuc[:amount])
 
     def fragment(self, start, length):
         frag = _circular_fragment(self.nucleotides, start, length)

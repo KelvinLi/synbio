@@ -95,6 +95,17 @@ class LinearSequence(BaseSequence):
         end = start + length
         return LinearSequence(self.nucleotides[start:end])
 
+    def join(self, others):
+        it = iter(others)
+        other = next(it)
+        if other.is_circular:
+            raise TypeError
+        nucleotides = list(other.nucleotides)
+        for other in it:
+            nucleotides.extend(self.nucleotides)
+            nucleotides.extend(other.nucleotides)
+        return LinearSequence(nucleotides)
+
     def to_circular(self):
         return CircularSequence(self.nucleotides)
 
@@ -111,6 +122,3 @@ class CircularSequence(BaseSequence):
     def fragment(self, start, length):
         frag = _circular_fragment(self.nucleotides, start, length)
         return LinearSequence(frag)
-
-    def to_linear(self):
-        return self.fragment(0, len(self))

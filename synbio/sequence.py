@@ -4,6 +4,13 @@ def _min_rotation(sequence):
 
     The n-step left-rotation is defined as:
         sequence[n:] + sequence[:n]
+
+    >>> _min_rotation([3, 4, 2, 1])
+    3
+    >>> _min_rotation([8, 8, -1, -1, 4])
+    2
+    >>> _min_rotation([7])
+    0
     """
     L = len(sequence)
     depth = 0

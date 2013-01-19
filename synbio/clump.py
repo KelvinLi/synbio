@@ -1,50 +1,20 @@
 """Raw model of a "clump" of DNA."""
 
-def _has_overlap(starts_ends):
-    """
-    Returns True if any of the given half-open intervals intersect.
+def _half_annealments(annealments):
+    for ann in annealments:
+        for i in 0, 1:
+            yield ann.sequences[i], ann.starts[i], ann.length
 
-    starts_ends -- (iterable) half-open intervals of the form:
-                   [(start0, end0), (start1, end1), ...]
-    """
-    taken = list()
-    for s, e in starts_ends:
-        if not s < e:
-            raise ValueError
-        if any(not (old_e <= s or e <= old_s) for old_s, old_e in taken):
-            return True
-        taken.append((s, e))
-    return False
-
-def _normalized_circular_starts_ends(starts_ends, L):
-    """
-    Given a set of intervals, normalizes the intervals over modulo arithmetic
-    so that intersections can be computed using `_has_overlap'
-
-    starts_ends -- (iterable) half-open intervals, to be normalized modulo `L'
-    L           -- (int) modulus
-    """
-    iter = ((s % L, e % L) for s, e in starts_ends)
-    for s, e in iter:
-        if s < e:
-            yield (s, e)
-            continue
-        yield (s, L)
-        if e:
-            yield (0, e)
-
-def _sequence_has_overlap(sequence, starts_ends):
-    """
-    Returns True if the given half-open intervals overlap on `sequence'.
-
-    sequence -- (BaseSequence) used to extract geometry
-    starts_ends -- (iterable) half-open intervals; interpretation
-                   depends on geometry
-    """
-    if sequence.is_circular:
-        starts_ends = _normalized_circular_starts_ends(
-                      starts_ends, len(sequence))
-    return _has_overlap(starts_ends)
+def _has_overlap_halves(seqs, starts, lengths):
+    common_seq = seqs[0]
+    if seqs[1] is not common_seq:
+        return False
+    diff = starts[0] - starts[1]
+    if not common_seq.is_circular:
+        return -lengths[0] < diff < lengths[1]
+    L = len(common_seq)
+    assert all(0 < x <= L for x in lengths)
+    return diff % L < lengths[1] or diff % L > L - lengths[0]
 
 class Annealment:
     def __init__(self, sequences, starts, length):
@@ -60,20 +30,10 @@ class Annealment:
             raise ValueError("sequences must be reverse complementary over " \
                              "annealment region")
 
-    def ends(self):
-        return tuple(s + self.length for s in self.starts)
-
-    def has_overlap(self, other):
-        # TODO: there is room for optimization
-        for s, o in (0, 0), (0, 1), (1, 0), (1, 1):
-            common_sequence = self.sequences[s]
-            if common_sequence is not other.sequences[o]:
-                continue
-            common_starts_ends = ((self.starts[s], self.ends()[s]),
-                                  (other.starts[o], other.ends()[o]))
-            if _sequence_has_overlap(common_sequence, common_starts_ends):
-                return True
-        return False
+    def has_overlap(self, others):
+        return any(_has_overlap_halves(*zip(self_half, other_half))
+                   for self_half in _half_annealments((self,))
+                   for other_half in _half_annealments(others))
 
 class Clump:
     def __init__(self):
@@ -115,7 +75,7 @@ class Clump:
         new = Annealment(sequences, starts, length)
         if overwrite:
             raise NotImplementedError
-        if any(new.has_overlap(old) for old in self.annealments):
+        if new.has_overlap(self.annealments):
             raise ValueError("refusing to overwrite existing annealment")
         return self.__replace(ann=self.annealments + (new,))
 

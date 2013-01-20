@@ -16,6 +16,47 @@ def _has_overlap_halves(seqs, starts, lengths):
     assert all(0 < x <= L for x in lengths)
     return diff % L < lengths[1] or diff % L > L - lengths[0]
 
+def _query_pair_match(q, x):
+    assert len(q) == len(x) == 2
+    q = list(q)
+    for i in 0, 1:
+        if q[i] is None:
+            q[i] = x[i]
+    return x if tuple(q) == tuple(x) else None
+
+class AnnealmentQuery:
+    def __init__(self, sequences, starts, length):
+        self.sequences = tuple(sequences)
+        self.starts = tuple(starts)
+        self.length = length
+        if not len(self.sequences) == len(self.starts) == 2:
+            raise ValueError
+
+    def _reversed(self):
+        return AnnealmentQuery(reversed(self.sequences),
+                               reversed(self.starts),
+                               self.length)
+
+    def _match_try(self, annealment):
+        seqs_match = _query_pair_match(self.sequences, annealment.sequences)
+        if seqs_match is None:
+            return None
+        starts_match = _query_pair_match(self.starts, annealment.starts)
+        if starts_match is None:
+            return None
+        if self.length is not None and self.length != annealment.length:
+            return None
+        return AnnealmentQuery(seqs_match, starts_match, annealment.length)
+
+    def _match_one(self, annealment):
+        m = self._match_try(annealment)
+        if m is None:
+            return self._reversed()._match_try(annealment)
+        return m
+
+    def match_all(self, annealments):
+        return filter(None, (self._match_one(ann) for ann in annealments))
+
 class Annealment:
     def __init__(self, sequences, starts, length):
         self.sequences = tuple(sequences)
@@ -104,3 +145,6 @@ class Clump:
         new = self.strip_annealments((old,))
         return new.__replace_sequences(s for s in new.sequences
                                        if s is not old)
+
+    def query_annealments(self, query):
+        return query.match_all(self.annealments)

@@ -7,6 +7,7 @@ module_names = (
     "synbio.sequence",
     "synbio.shape",
     "synbio.shapes",
+    "synbio.shapes.lineardouble",
 )
 
 def test(name):

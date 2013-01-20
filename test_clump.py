@@ -1,41 +1,6 @@
+from test_mod import *
 from synbio import clump
 from synbio import sequence
-
-def dump_nuc(n):
-    if n == sequence.Nucleotide.A:
-        return "A"
-    elif n == sequence.Nucleotide.C:
-        return "C"
-    elif n == sequence.Nucleotide.G:
-        return "G"
-    elif n == sequence.Nucleotide.T:
-        return "T"
-    else:
-        raise ValueError
-
-def dump_seq(s):
-    return "".join(dump_nuc(n) for n in s.nucleotides)
-
-def dump_clump(clump):
-    print(clump.sequences)
-    print(clump.annealments)
-    print(dump_seq(clump.sequences[0]))
-    print(dump_seq(clump.sequences[1]))
-    print([ann.starts for ann in clump.annealments])
-    print([ann.length for ann in clump.annealments])
-    print("=========")
-
-def make_nucleotide(s):
-    if s == "a":
-        return sequence.Nucleotide.A
-    elif s == "c":
-        return sequence.Nucleotide.C
-    elif s == "g":
-        return sequence.Nucleotide.G
-    elif s == "t":
-        return sequence.Nucleotide.T
-    else:
-        raise ValueError
 
 test_clump = clump.Clump()
 

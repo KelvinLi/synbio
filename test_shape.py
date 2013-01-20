@@ -1,7 +1,10 @@
 from test_mod import *
-from synbio import sequence, shapes
+from synbio import clump, sequence, shapes
 
-test_clump = shapes.create_pcr_template(map(make_nucleotide, "attacg"))
-shapes.PCR_TEMPLATE.examine(test_clump)
-print(shapes.DOUBLE_STRANDED.examine(test_clump).sequence_lengths())
-print(shapes.GENERIC.examine(test_clump).count_sequences())
+test_shape = shapes.LINEAR_DOUBLE \
+    .accept(clump.Clump()) \
+    .set_top_middle(sequence.LinearSequence(map(make_nucleotide, "attacg"))) \
+    .set_overhangs(top5=sequence.LinearSequence(map(make_nucleotide, "ccgg")))
+test_clump = test_shape.clump()
+dump_clump(test_clump)
+dump_clump(shapes.LINEAR_DOUBLE.accept(test_clump).clump())

@@ -14,16 +14,20 @@ def dump_nuc(n):
         raise ValueError
 
 def dump_seq(s):
-    return "".join(dump_nuc(n) for n in s.nucleotides)
+    return "seq: " + "".join(dump_nuc(n) for n in s.nucleotides)
 
 def dump_clump(clump):
-    print(clump.sequences)
-    print(clump.annealments)
-    print(dump_seq(clump.sequences[0]))
-    print(dump_seq(clump.sequences[1]))
-    print([ann.starts for ann in clump.annealments])
-    print([ann.length for ann in clump.annealments])
-    print("=========")
+    print("CLUMP:")
+    print("   ", clump.sequences)
+    print("   ", clump.annealments)
+    for s in clump.sequences:
+        print("   ", dump_seq(s))
+    print("   ", [ann.starts for ann in clump.annealments], [ann.length for ann in clump.annealments])
+
+def dump_query(query):
+    print("QUERY:")
+    print("   ", query.sequences)
+    print("   ", query.starts, query.length)
 
 def make_nucleotide(s):
     if s == "a":
@@ -50,12 +54,12 @@ dump_clump(test_clump)
 test_clump = test_clump.add_annealment(tuple(test_clump.sequences), (2, 4), 3)
 dump_clump(test_clump)
 
-test_clump = test_clump.remove_sequence(test_clump.sequences[0])
-print(test_clump.sequences)
-print(test_clump.annealments)
-print("=========")
+query_result = list(test_clump.query_annealments(clump.AnnealmentQuery((None, None), (None, None), None)))
+for q in query_result:
+    dump_query(q)
 
 test_clump = test_clump.remove_sequence(test_clump.sequences[0])
-print(test_clump.sequences)
-print(test_clump.annealments)
-print("=========")
+dump_clump(test_clump)
+
+test_clump = test_clump.remove_sequence(test_clump.sequences[0])
+dump_clump(test_clump)

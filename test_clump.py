@@ -9,18 +9,8 @@ test_clump = test_clump.add_sequence(
 test_clump = test_clump.add_sequence(
              sequence.CircularSequence(make_nucleotide(n) for n in "gctca"))
 
-test_clump = test_clump.add_annealment(test_clump.sequences, (0, 2), 2)
+test_clump = test_clump.add_annealment((0, 1), (0, 2), 2)
 dump_clump(test_clump)
 
-test_clump = test_clump.add_annealment(tuple(test_clump.sequences), (2, 4), 3)
+test_clump = test_clump.add_annealment((0, 1), (2, 4), 3)
 dump_clump(test_clump)
-
-test_clump = test_clump.remove_sequence(test_clump.sequences[0])
-print(test_clump.sequences)
-print(test_clump.annealments)
-print("=========")
-
-test_clump = test_clump.remove_sequence(test_clump.sequences[0])
-print(test_clump.sequences)
-print(test_clump.annealments)
-print("=========")

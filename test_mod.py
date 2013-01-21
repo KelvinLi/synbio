@@ -17,11 +17,11 @@ def dump_seq(s):
 
 def dump_clump(clump):
     print("CLUMP:")
-    print("   ", clump.sequences)
-    print("   ", clump.annealments)
-    for s in clump.sequences:
+    print("   ", clump._sequences)
+    print("   ", clump._annealments)
+    for s in clump._sequences:
         print("   ", dump_seq(s))
-    print("   ", [ann.starts for ann in clump.annealments], [ann.length for ann in clump.annealments])
+    print("   ", [ann.starts for ann in clump._annealments], [ann.length for ann in clump._annealments])
 
 def make_nucleotide(s):
     if s == "a":

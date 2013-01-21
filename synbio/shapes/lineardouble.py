@@ -24,8 +24,9 @@ class _Shape(BaseShape):
                  (self._overhangs.bottom5, self._overhangs.bottom3))
         out = clump.Clump()
         out = out.add_sequence(top).add_sequence(bottom)
-        assert out.locate_sequences(top) == (0,)
-        assert out.locate_sequences(bottom) == (1,)
+        assert len(out.sequences()) == 2
+        assert 0 in out.locate_sequences(top)
+        assert 1 in out.locate_sequences(bottom)
         return out.add_annealment(
                (0, 1),
                (len(self._overhangs.top5), len(self._overhangs.bottom5)),

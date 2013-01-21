@@ -81,8 +81,8 @@ class Clump:
         return tuple(self._sequences)
 
     def locate_sequences(self, match):
-        return tuple(key for key, seq in enumerate(self._sequences)
-                     if seq.has_same_nucleotides(match))
+        return (key for key, seq in enumerate(self._sequences)
+                if seq.has_same_nucleotides(match))
 
     # TODO: this function is nested too deeply
     def query_annealments(self, key):

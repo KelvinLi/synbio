@@ -66,6 +66,9 @@ class Clump:
             raise TypeError("keys must be integers")
         if not all(0 <= k < len(self._sequences) for k in keys):
             raise ValueError("invalid keys")
+        if keys[0] > keys[1]:
+            keys = tuple(reversed(keys))
+            starts = tuple(reversed(starts))
         new = _Annealment(keys, starts, length)
         if overwrite:
             raise NotImplementedError

@@ -31,10 +31,10 @@ class Clump:
         new._annealments = self._annealments
         return new
 
-    def __append_annealment(self, annealment):
+    def __replace_annealments(self, replacement):
         new = Clump()
         new._sequences = self._sequences
-        new._annealments = self._annealments + (annealment,)
+        new._annealments = replacement
         return new
 
     def _validate_annealment(self, annealment):
@@ -72,7 +72,7 @@ class Clump:
         if self._has_annealment_conflict(new):
             raise ValueError("refusing to overwrite conflicting annealment(s)")
         self._validate_annealment(new)
-        return self.__append_annealment(new)
+        return self.__replace_annealments(self._annealments + (new,))
 
     def add_sequence(self, new):
         return self.__append_sequence(new)

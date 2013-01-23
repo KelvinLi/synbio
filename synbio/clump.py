@@ -1,5 +1,49 @@
 """Raw model of a "clump" of DNA."""
 
+import itertools
+
+# TODO: this annealment merge code is an unholy mess
+def _sorted_groupby(iterable, key):
+    groups = itertools.groupby(sorted(iterable, key=key), key)
+    return (list(g) for k, g in groups)
+
+def _group_annealments_by_keys(annealments):
+    groups0 = _sorted_groupby(annealments, lambda a: a.keys[0])
+    for group0 in groups0:
+        groups1 = _sorted_groupby(group0, lambda a: a.keys[1])
+        for group1 in groups1:
+            yield group1
+
+def _merge_annealment_pair(annA, annB):
+    assert annA.keys == annB.keys
+    if tuple(s + annA.length for s in annA.starts) != annB.starts:
+        return None
+    return _Annealment(annA.keys, annA.starts, annA.length + annB.length)
+
+def _merge_annealment_group_once(group):
+    modified = False
+    i = 0
+    while i + 1 < len(group):
+        new = _merge_annealment_pair(group[i], group[i + 1])
+        if new is None:
+            i += 1
+            continue
+        group.pop(i)
+        group.pop(i)
+        group.insert(0, new)
+        modified = True
+        i += 1
+    return modified
+
+def _merge_annealment_group(group):
+    out = sorted(group, key=lambda a: a.starts[0])
+    assert len(out) >= 1
+    if len(out) <= 1:
+        return out
+    while _merge_annealment_group_once(out):
+        out = sorted(out, key=lambda a: a.starts[0])
+    return out
+
 def _has_overlap(common_seq, starts, lengths):
     diff = starts[0] - starts[1]
     if not common_seq.is_circular:
@@ -51,6 +95,14 @@ class Clump:
                    for key, start in zip(annealment.keys, annealment.starts)
                    for r in self.query_annealments(key))
 
+    def _merge_annealments(self):
+        groups = _group_annealments_by_keys(self._annealments)
+        merged_groups = (_merge_annealment_group(group) for group in groups)
+        replacement = tuple(annealment
+                            for merged_group in merged_groups
+                            for annealment in merged_group)
+        return self.__replace_annealments(replacement)
+
     def add_annealment(self, keys, starts, length, *, overwrite=False):
         keys = tuple(keys)
         starts = tuple(starts)
@@ -75,7 +127,8 @@ class Clump:
         if self._has_annealment_conflict(new):
             raise ValueError("refusing to overwrite conflicting annealment(s)")
         self._validate_annealment(new)
-        return self.__replace_annealments(self._annealments + (new,))
+        return self.__replace_annealments(self._annealments + (new,)) \
+                   ._merge_annealments()
 
     def add_sequence(self, new):
         return self.__append_sequence(new)
